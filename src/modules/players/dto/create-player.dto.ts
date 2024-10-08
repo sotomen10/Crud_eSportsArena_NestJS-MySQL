@@ -1,16 +1,27 @@
-import { IsString, IsEmail, IsNotEmpty, IsNumber, IsArray, ArrayNotEmpty, IsUUID } from "class-validator";
-import { IsNumericDigits } from "src/common/decorators/numerical-quantity";
+
+import { IsEmail, IsNumber, IsString, IsBoolean, IsOptional, IsNotEmpty, IsArray, ArrayNotEmpty} from 'class-validator';
+import { CheckNumberLength } from 'src/common/decorators/digits-check.decorator';
 
 export class CreatePlayerDto {
+    @IsNotEmpty()
+    @IsString()
+    nickname: string;
 
     @IsNotEmpty()
     @IsString()
-    fullName: string;
+    fullname: string;
 
+    @IsNotEmpty()
     @IsEmail()
-    @IsNotEmpty()
-    @IsString()
     email: string;
+
+    @IsNotEmpty()
+    @IsNumber()
+    age: number;
+
+    @IsBoolean()
+    @IsOptional() 
+    isActive?: boolean = true; 
 
     @IsNotEmpty()
     @IsString()
@@ -22,12 +33,13 @@ export class CreatePlayerDto {
 
     @IsNotEmpty()
     @IsNumber()
-    @IsNumericDigits(11, { message: 'Phone number should be 10 digits only' })
-    phone: number;
+    @CheckNumberLength(10)
+    whatsapp: number;
 
     @IsArray()
     @ArrayNotEmpty()
     @IsNumber({}, { each: true }) 
     roles: number[];
+
 }
 

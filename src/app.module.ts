@@ -1,14 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { ConfigModuleCustom } from './config/config.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
-import { AppService } from './app.service';
-import {ConfigModuleCustom } from './config/config.module';
 import { PlayersModule } from './modules/players/players.module';
+import { APP_FILTER } from '@nestjs/core';
+import { AllExceptionsFilter } from './common/filters/general-exceptions.filter';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [
-    ConfigModuleCustom,
+  imports: [ConfigModuleCustom,
+    AuthModule,
     TypeOrmModule.forRoot({ 
       type:'mysql',
       host: process.env.DB_HOST,
@@ -19,9 +22,14 @@ import { PlayersModule } from './modules/players/players.module';
       entities: [join(__dirname + '/**/*.entity{.ts,.js}')],
       synchronize: true,}),
     PlayersModule,
-    
+
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,
+    {
+      provide:APP_FILTER,
+      useClass:AllExceptionsFilter
+    }
+  ],
 })
 export class AppModule {}
