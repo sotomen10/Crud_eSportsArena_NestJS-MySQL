@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { login } from './dto/login-auth.dto';
 import { CreatePlayerDto } from '../modules/players/dto/create-player.dto';
-import { CreatePlayerPipe } from '../modules/players/pipes/create-player.pipe';
+import { CreatePlayerPipe } from '../modules/players/pipes/create-player.pipe'; 
 import { GoogleAuthGuard } from './guards/jwt-google.guard';
 import { Players } from 'src/modules/players/entities/player.entity';
 
@@ -13,15 +13,15 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get('google')
-  @ApiOperation({ summary: 'Inicia el flujo de autenticación con Google' })
+  @ApiOperation({ summary: 'Starts Google authentication flow' })
   @UseGuards(GoogleAuthGuard)
   async googleAuth(@Req() req) {
     
   }
 
   @Get('google/callback')
-  @ApiOperation({ summary: 'Callback de autenticación con Google' })
-  @ApiResponse({ status: 302, description: 'Redirige al frontend con el token de acceso' })
+  @ApiOperation({ summary: 'Google authentication callback' })
+  @ApiResponse({ status: 302, description: 'Redirects to frontend with access token' })
   @UseGuards(GoogleAuthGuard)
   async googleAuthCallback(@Req() req, @Res() res) {
     const user = req.user;
@@ -38,8 +38,8 @@ export class AuthController {
   }
 
   @Post('register')
-  @ApiOperation({ summary: 'Registrar un nuevo jugador' })
-  @ApiResponse({ status: 201, description: 'Jugador registrado correctamente' })
+  @ApiOperation({ summary: 'Register a new player' })
+  @ApiResponse({ status: 201, description: 'Player registered successfully' })
   @ApiBody({ type: CreatePlayerDto })
   register(@Body(CreatePlayerPipe) createPlayerDto: CreatePlayerDto) {
     return this.authService.register(createPlayerDto);
@@ -47,8 +47,8 @@ export class AuthController {
 
   @Post('signin')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Iniciar sesión' })
-  @ApiResponse({ status: 200, description: 'Sesión iniciada correctamente' })
+  @ApiOperation({ summary: 'Sign in' })
+  @ApiResponse({ status: 200, description: 'Session started successfully' })
   @ApiBody({ type: login }) 
   async signIn(@Body() login: login): Promise<{ alldata: Players; accessToken: string }> {
     return this.authService.signIn(login);

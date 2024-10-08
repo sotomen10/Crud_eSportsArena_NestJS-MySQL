@@ -11,9 +11,11 @@ export class CreatePlayerPipe implements PipeTransform {
       return value;
     }
 
+    
     const object = plainToInstance(CreatePlayerDto, value);
     const errors = await validate(object);
 
+    
     if (errors.length > 0) {
       const errorMessages = errors.map(error =>
         Object.values(error.constraints).join(', ')

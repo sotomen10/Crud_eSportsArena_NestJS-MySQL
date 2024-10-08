@@ -13,12 +13,12 @@ export class UpdatePlayerPipe implements PipeTransform {
 
     const object = plainToInstance(UpdatePlayerDto, value);
 
-    const hasValidProperties = Object.keys(value).some(
+    const hasValidProps = Object.keys(value).some(
       key => value[key] !== undefined && value[key] !== ''
     );
 
-    if (!hasValidProperties) {
-      throw new BadRequestException('At least one valid property is required.');
+    if (!hasValidProps) {
+      throw new BadRequestException('At least one valid property is required for update.');
     }
 
     const errors = await validate(object);
@@ -29,9 +29,9 @@ export class UpdatePlayerPipe implements PipeTransform {
     const allowedKeys = Object.keys(new UpdatePlayerDto());
     const invalidKeys = Object.keys(value).filter(key => !allowedKeys.includes(key));
 
-    const validProperties = Object.keys(object);
-    if (invalidKeys.length > 0 && !validProperties.includes(invalidKeys[0])) {
-      throw new BadRequestException(`Invalid fields: ${invalidKeys.join(', ')}`);
+    const validProps = Object.keys(object);
+    if (invalidKeys.length > 0 && !validProps.includes(invalidKeys[0])) {
+      throw new BadRequestException(`Invalid properties: ${invalidKeys.join(', ')}`);
     }
 
     return object;

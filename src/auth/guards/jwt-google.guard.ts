@@ -1,6 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Players } from '../../modules/players/entities/player.entity'; 
+import { Players } from '../../modules/players/entities/player.entity';
+
 @Injectable()
 export class GoogleAuthGuard extends AuthGuard('google') implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
