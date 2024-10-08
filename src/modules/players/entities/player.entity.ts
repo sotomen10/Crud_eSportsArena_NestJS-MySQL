@@ -1,9 +1,9 @@
 import { IsEmail, IsNumber, IsString } from "class-validator";
 import { Column, PrimaryGeneratedColumn, Entity, CreateDateColumn, ManyToMany, JoinTable } from "typeorm";
-// import { Role } from '../../../auth/entities/roles.entity'; 
+import {Role} from '../../../auth/entities/roles.entity';
 
 @Entity()
-export class Player {
+export class Players {
 
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -15,11 +15,20 @@ export class Player {
     updatedAt: Date;
 
     @Column()
-    fullName: string;
+    nickname: string;
+
+    @Column()
+    fullname:string
 
     @Column({ unique: true })
     @IsEmail()
     email: string;
+
+    @Column()
+    age: number;
+
+    @Column({ default: true })
+    isActive: boolean;
 
     @Column()
     @IsString()
@@ -27,10 +36,10 @@ export class Player {
 
     @Column({ type: 'bigint' })
     @IsNumber()
-    phone: number;
+    whatsapp: number;
 
-    
-    // @ManyToMany(() => Role, role => role.users)
-    // @JoinTable() 
-    // roles: Role[];
+
+    @ManyToMany(() => Role, role => role.users)
+    @JoinTable() 
+    roles: Role[];
 }

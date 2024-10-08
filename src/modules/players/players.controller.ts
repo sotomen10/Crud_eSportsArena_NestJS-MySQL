@@ -1,54 +1,43 @@
-import { Controller, Get, Post, Body, Query, Patch, Param, Delete, ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete ,Query, UseGuards} from '@nestjs/common';
+import { PlayersService } from './players.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
-import { CreatePlayerPipe } from './pipes/create-player.pipe';
 import { PaginationDTO } from 'src/common/dto/pagination.dto';
-import { PaginationValidationPipe } from 'src/common/pipes/pagination.pipe';
-import { FindById } from './dto/find-by-id.dto';
-import { FindByIdPipeCustom } from './pipes/fin-by-id.pipe';
+import { PaginationValidationPipe } from 'src/common/pipes/paginations.pipe';
+import { FindByIdPipeCustom } from 'src/common/pipes/find-by-id.pipe';
+import { FindById } from 'src/common/dto/find-by-id.dto';
 import { UpdatePlayerPipe } from './pipes/update-player.pipe';
-// import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
-// import { RolesGuard } from 'src/auth/guards/jwt-roles.guard';
-import { ApiTags, ApiBearerAuth, ApiQuery, ApiParam, ApiBody, ApiResponse } from '@nestjs/swagger';
-import { PlayersService } from './players.service';
+import { CreatePlayerPipe } from './pipes/create-player.pipe';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { RolesGuard } from 'src/auth/guards/jwt-roles.guard';
 
-@ApiTags('Players') 
-@ApiBearerAuth() 
-// @UseGuards(JwtAuthGuard)
-@Controller('playerss')
+@UseGuards(JwtAuthGuard,RolesGuard)
+@Controller('players')
 export class PlayersController {
   constructor(private readonly playersService: PlayersService) {}
 
+  @Post()
+  create(@Body(CreatePlayerPipe) createPlayerDto: CreatePlayerDto) {
+    return this.playersService.createPlayer(createPlayerDto);
+  }
+
   @Get()
-  @ApiResponse({ status: 200, description: 'List of players', type: [CreatePlayerDto] }) 
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' }) 
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Limit of players per page' })
   findAll(@Query(PaginationValidationPipe) Pagination: PaginationDTO) {
     return this.playersService.findAll(Pagination);
   }
 
   @Get(':id')
-  @ApiResponse({ status: 200, description: 'Player found', type: CreatePlayerDto }) 
-  @ApiResponse({ status: 404, description: 'Player not found' }) 
-  @ApiParam({ name: 'id', type: String, description: 'Player ID' }) 
-  findOne(@Param(FindByIdPipeCustom) id: FindById) {
+  findOne(@Param('id',new FindByIdPipeCustom()) id:FindById) {
     return this.playersService.findOne(id);
   }
 
   @Patch(':id')
-  @ApiResponse({ status: 200, description: 'Player updated', type: CreatePlayerDto }) 
-  @ApiResponse({ status: 404, description: 'Player not found' }) 
-  @ApiParam({ name: 'id', type: String, description: 'Player ID' }) 
-  @ApiBody({ type: UpdatePlayerDto }) // Cuerpo de la solicitud
-  update(@Param(FindByIdPipeCustom) id: FindById, @Body(UpdatePlayerPipe) updatePlayerDto: UpdatePlayerDto) {
-    return this.playersService.update(id, updatePlayerDto);
+  update(@Param('id',new FindByIdPipeCustom()) id:FindById, @Body(UpdatePlayerPipe) updatePlayer: UpdatePlayerDto) {
+    return this.playersService.update(id, updatePlayer);
   }
 
   @Delete(':id')
-  @ApiResponse({ status: 200, description: 'Player removed' }) 
-  @ApiResponse({ status: 404, description: 'Player not found' }) 
-  @ApiParam({ name: 'id', type: String, description: 'Player ID' })
-  remove(@Param(FindByIdPipeCustom) id: FindById) {
+  remove(@Param('id',new FindByIdPipeCustom()) id:FindById) {
     return this.playersService.remove(id);
   }
 }

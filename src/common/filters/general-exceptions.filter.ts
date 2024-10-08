@@ -15,14 +15,14 @@ import {
       const response = ctx.getResponse<Response>();
       const request = ctx.getRequest<Request>();
   
-   
+     
       const status = this.getStatus(exception);
       const message = this.getMessage(exception);
   
      
       this.logError(exception, status, request.url);
   
-  
+      
       response.status(status).json({
         statusCode: status,
         timestamp: new Date().toISOString(),
@@ -44,7 +44,7 @@ import {
         if (typeof response === 'string') {
           return response;
         } 
-       
+        
         return (response as { message?: string }).message || 'Error no específico';
       } else if (exception instanceof Error) {
         return exception.message || 'Error no específico';
