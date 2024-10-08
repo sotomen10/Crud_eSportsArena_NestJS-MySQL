@@ -40,6 +40,7 @@ export class CreatePlayerDto {
     @ArrayNotEmpty()
     @IsNumber({}, { each: true }) 
     roles: number[];
+    
 
 }
 

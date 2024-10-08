@@ -1,6 +1,7 @@
 import { IsEmail, IsNumber, IsString } from "class-validator";
 import { Column, PrimaryGeneratedColumn, Entity, CreateDateColumn, ManyToMany, JoinTable } from "typeorm";
-import {Role} from '../../../auth/entities/roles.entity';
+import {Role} from '../../../auth/entities/roles.entity'; 
+import { Tournament } from "src/modules/tournamet/entities/tournamet.entity";
 
 @Entity()
 export class Players {
@@ -42,4 +43,8 @@ export class Players {
     @ManyToMany(() => Role, role => role.users)
     @JoinTable() 
     roles: Role[];
+
+
+    @ManyToMany(() => Tournament, tournament => tournament.players)
+    tournaments: Tournament[];
 }

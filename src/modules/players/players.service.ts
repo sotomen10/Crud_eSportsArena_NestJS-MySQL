@@ -14,17 +14,19 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { PaginationDTO } from 'src/common/dto/pagination.dto';
 import { FindById } from 'src/common/dto/find-by-id.dto';
+import { Tournament } from '../tournamet/entities/tournamet.entity';
 
 @Injectable()
 export class PlayersService implements CrudPlayers {
-  constructor(@InjectRepository(Players) private playersRepository: Repository<Players>) {}
+  constructor(@InjectRepository(Players) private playersRepository: Repository<Players>) { }
+  @InjectRepository(Tournament) private tournamentRepository: Repository<Tournament>
 
   async createPlayer(createPlayer: CreatePlayerDto): Promise<Players> {
     try {
       const { password, confirmPassword, roles, ...rest } = createPlayer;
 
       if (password !== confirmPassword) {
-        throw new BadRequestException('Passwords do not match; check confirm password.');
+        throw new BadRequestException('The keys do not match; ensure that confirm password is correct.');
       }
 
       const encryptedPassword = await bcrypt.hash(password, 10);
@@ -32,8 +34,8 @@ export class PlayersService implements CrudPlayers {
       const newPlayer = this.playersRepository.create({
         ...rest,
         password: encryptedPassword,
-        roles: roles.map(roleId => ({ id: roleId })), 
-    });
+        roles: roles.map(roleId => ({ id: roleId })),
+      });
 
       return await this.playersRepository.save(newPlayer);
     } catch (error) {
@@ -41,7 +43,7 @@ export class PlayersService implements CrudPlayers {
       if (error.code === '23505') {
         throw new ConflictException('The email is already in use.');
       }
-      throw new InternalServerErrorException('Error creating player; try again later.');
+      throw new InternalServerErrorException('Error creating the player; please try again later.');
     }
   }
 
@@ -58,7 +60,7 @@ export class PlayersService implements CrudPlayers {
       const [players, total] = await this.playersRepository.findAndCount({
         skip,
         take: limit,
-        relations: ['roles']
+        relations: ['roles', 'tournaments']
       });
 
       return {
@@ -73,11 +75,11 @@ export class PlayersService implements CrudPlayers {
     }
   }
 
-  async findOne(idObject:FindById): Promise<Players> {
+  async findOne(idObject: FindById): Promise<Players> {
     try {
       const playerFound = await this.playersRepository.findOne({
         where: { id: idObject.id },
-        relations: ['roles']
+        relations: ['roles', 'tournaments']
       });
       if (!playerFound) {
         throw new NotFoundException(`Player with id ${idObject.id} was not found; ensure that the id is correct.`);
@@ -92,7 +94,7 @@ export class PlayersService implements CrudPlayers {
     }
   }
 
-  async update(idObject:FindById, updatePlayer: UpdatePlayerDto): Promise<Players> {
+  async update(idObject: FindById, updatePlayer: UpdatePlayerDto): Promise<Players> {
     try {
       const player = await this.playersRepository.findOne({ where: { id: idObject.id } });
       if (!player) {
@@ -109,13 +111,13 @@ export class PlayersService implements CrudPlayers {
         updatePlayer.password = await bcrypt.hash(password, 10);
       }
 
-      Object.assign(player, updatePlayer); 
+      Object.assign(player, updatePlayer);
 
-      await this.playersRepository.save(player); 
+      await this.playersRepository.save(player);
 
       return await this.playersRepository.findOne({
         where: { id: idObject.id },
-        relations: ['roles']
+        relations: ['roles', 'tournaments']
       });
     } catch (error) {
       console.error('Error updating player:', error.message);
@@ -126,7 +128,7 @@ export class PlayersService implements CrudPlayers {
     }
   }
 
-  async remove(idObject:FindById): Promise<{ message: string }> {
+  async remove(idObject: FindById): Promise<{ message: string }> {
     try {
       const player = await this.playersRepository.findOne({ where: { id: idObject.id } });
       if (!player) {
@@ -158,5 +160,59 @@ export class PlayersService implements CrudPlayers {
       throw new InternalServerErrorException('Error finding the player by email; please try again later.');
     }
   }
+
+  async matchPlayerToRandomTournament(playerId: string): Promise<{ message: string; tournamentName: string; playerNickname: string }> {
+    try {
+
+      const player = await this.playersRepository.findOne({
+        where: { id: playerId },
+        relations: ['tournaments'],
+      });
+
+      if (!player) {
+        throw new NotFoundException('Player not found');
+      }
+
+
+      const tournaments = await this.tournamentRepository.find();
+
+      if (tournaments.length === 0) {
+        throw new NotFoundException('No tournaments available');
+      }
+
+      let randomTournament;
+      let tries = 0;
+      const maxTries = 5;
+
+      do {
+        randomTournament = tournaments[Math.floor(Math.random() * tournaments.length)];
+        tries++;
+      } while (player.tournaments.some(t => t.id === randomTournament.id) && tries < maxTries);
+
+
+      if (player.tournaments.some(t => t.id === randomTournament.id)) {
+        throw new ConflictException('No unassigned tournaments available for this player');
+      }
+
+
+      player.tournaments.push(randomTournament);
+
+
+      await this.playersRepository.save(player);
+
+
+      return {
+        message: 'Player successfully matched to a random tournament.',
+        tournamentName: randomTournament.name,
+        playerNickname: player.nickname,
+      };
+    } catch (error) {
+      console.error('Error in matching player to tournament:', error);
+      throw new InternalServerErrorException(`Error matching player to tournament: ${error.message}`);
+    }
+  }
+
+
+
 }
 
